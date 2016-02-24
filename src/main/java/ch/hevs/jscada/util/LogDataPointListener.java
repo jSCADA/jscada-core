@@ -1,12 +1,11 @@
 package ch.hevs.jscada.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.hevs.jscada.config.ScadaSystem;
 import ch.hevs.jscada.config.ScadaSystemFactory;
 import ch.hevs.jscada.model.DataPoint;
 import ch.hevs.jscada.model.DataPointListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LogDataPointListener implements DataPointListener {
 	@Override

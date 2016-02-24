@@ -8,7 +8,7 @@ import ch.hevs.jscada.exception.ConversionException;
 public interface StringConvertible {
 
 	/**
-	 * Returns the string representation of the object or the objet's value.
+	 * Returns the string representation of the object or the object's value.
 	 * 
 	 * @return	String representation of the object or the object's value.
 	 */

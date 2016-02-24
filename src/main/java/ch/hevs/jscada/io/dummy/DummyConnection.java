@@ -80,17 +80,17 @@ public class DummyConnection implements Connection, DataPointListener {
 
 	@Override
 	public List<ConnectionMode> supportedModes() {
-		return Collections.singletonList(ConnectionMode.SYNCHRONEOUS_INPUTS);
+		return Collections.singletonList(ConnectionMode.SYNCHRONOUS_INPUTS);
 	}
 
 	@Override
 	public ConnectionMode getMode() {
-		return ConnectionMode.SYNCHRONEOUS_INPUTS;
+		return ConnectionMode.SYNCHRONOUS_INPUTS;
 	}
 
 	@Override
 	public void setMode(ConnectionMode mode) throws ConfigurationException {
-		if (mode != ConnectionMode.SYNCHRONEOUS_INPUTS) {
+		if (mode != ConnectionMode.SYNCHRONOUS_INPUTS) {
 			throw new ConfigurationException("Mode not supported!");
 		}
 	}

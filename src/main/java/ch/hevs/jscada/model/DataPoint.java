@@ -51,7 +51,7 @@ public abstract class DataPoint implements Selectable, StringConvertible, Double
     }
 
 	/**
-	 * Adds a listener to the data point. If onlyOnchanges is false, the listener will be informed about each update 
+	 * Adds a listener to the data point. If onlyOnChanges is false, the listener will be informed about each update
 	 * of the data point. Update means that the value has been updated, but not necessarily that the value has changed.
 	 * If onlyOnChanges is true, the data listener is informed only if the value actually changes.
 	 * 

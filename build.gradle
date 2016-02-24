@@ -1,15 +1,30 @@
-group 'ch.hevs.jscada'
-version '0.1.0-SNAPSHOT'
-
 apply plugin: 'java'
 
+group 'ch.hevs.jscada'
+version '0.1-SNAPSHOT'
 sourceCompatibility = 1.7
 
 repositories {
-    mavenCentral()
+    jcenter()
+}
+
+configurations {
+    runnable
 }
 
 dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.11'
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'org.slf4j:slf4j-api:1.7.16'
+    runnable 'org.slf4j:slf4j-simple:1.7.16'
 }
+
+task runnableJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Version': version, 'Main-Class': 'ch.hevs.jscada.config.ScadaSystemFactory'
+    }
+    archiveName = 'jSCADA.jar'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runnable.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+build.dependsOn(runnableJar)

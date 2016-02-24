@@ -1,7 +1,7 @@
 package ch.hevs.jscada.io;
 
 /**
- * A SnychronizableListener can be registered within a Synchronizable in order to get notified just before and just 
+ * A SynchronizableListener can be registered within a Synchronizable in order to get notified just before and just
  * after the actual synchronization takes/took place. Note that such a listener can be registered within any class
  * instance where the class implements the Synchronizable interface. In addition to the Connection class, the 
  * ConnectionGroup class implements the interface as well.
@@ -15,14 +15,14 @@ public interface SynchronizableListener {
 	/**
 	 * This method will be called by the Synchronizable just before synchronizing.
 	 * 
-	 * @param synchronizeable	The Synchronizable that will be synchronized.
+	 * @param synchronizable	The Synchronizable that will be synchronized.
 	 */
-	void willSynchronize(Synchronizable synchronizeable);
+	void willSynchronize(Synchronizable synchronizable);
 	
 	/**
 	 * This method will be called by the Synchronizable just after synchronizing took place.
 	 * 
-	 * @param synchronizeable	The Synchronizable that was synchronized.
+	 * @param synchronizable	The Synchronizable that was synchronized.
 	 */
-	void didSynchronize(Synchronizable synchronizeable);
+	void didSynchronize(Synchronizable synchronizable);
 }

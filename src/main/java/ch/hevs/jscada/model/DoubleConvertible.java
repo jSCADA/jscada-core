@@ -8,7 +8,7 @@ import ch.hevs.jscada.exception.ConversionException;
 public interface DoubleConvertible {
 
 	/**
-	 * Returns the double representation of the object or the objet's value.
+	 * Returns the double representation of the object or the object's value.
 	 * 
 	 * @return	Double representation of the object or the object's value.
 	 */

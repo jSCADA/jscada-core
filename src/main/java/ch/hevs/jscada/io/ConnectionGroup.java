@@ -112,7 +112,7 @@ public class ConnectionGroup implements Synchronizable {
 			listener.willSynchronize(this);
 		}
 		
-		// Synchronize all connections using a thread pool to parallelize the work - normally a connection has to wait
+		// Synchronize all connections using a thread pool to paralyze the work - normally a connection has to wait
 		// most of the time for responses from the peer and during this time we can handle other connections.
 		ExecutorService exec = Executors.newCachedThreadPool();
     	for (final Connection connection: connections.values()) {

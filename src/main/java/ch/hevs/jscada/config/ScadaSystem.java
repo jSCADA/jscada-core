@@ -19,7 +19,11 @@ import java.util.TimerTask;
  */
 public class ScadaSystem {
     private static final Logger log = LoggerFactory.getLogger(ScadaSystem.class);
-    private int synchronizeInterval = 60000;
+
+    public static final int DEFAULT_SYNCHRONIZE_INTERVAL = 60000;
+    public static final int NO_SYNCHRONIZATION = 0;
+
+    private int synchronizeInterval = DEFAULT_SYNCHRONIZE_INTERVAL;
     private boolean active = false;
     private Timer synchronizationTimer = null;
     private final Process process = new Process();

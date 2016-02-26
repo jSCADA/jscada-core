@@ -6,14 +6,20 @@ import ch.hevs.jscada.exception.DuplicateIdException;
 import ch.hevs.jscada.io.Connection;
 import ch.hevs.jscada.model.DataPointType;
 import org.xml.sax.Attributes;
+import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
- * Supports loading a jSCADA system definition from a XML file.
+ * Supports loading a jSCADA system definition from a XML file or from a resource inside the jar..
  *
  * @author Michael Clausen (michael.clausen@hevs.ch)
  */
@@ -22,196 +28,135 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
     private enum ParseState {
         IDLE, FIELD, CONNECTIONS, INPUTS, OUTPUTS, TRIGGERS
     }
+    private ParseState state = ParseState.IDLE;
 
-    private class Handler extends DefaultHandler {
-        private void parseField(Attributes attributes) throws SAXException {
-            for (int i = 0; i < attributes.getLength(); ++i) {
-                // Search for "synchronizeInterval" attribute.
-                if (attributes.getLocalName(i).equals("synchronizeInterval")) {
-                    // Parse the value and set the interval on the SCADA system.
-                    int interval = Integer.parseInt(attributes.getValue(i));
-                    setSynchronisationInterval(interval);
-                }
+    private final DefaultHandler handler = new DefaultHandler() {
+        private Locator locator;
+
+        private void parseField(ConfigurationDictionary attributes) throws SAXParseException {
+            try {
+                setSynchronisationInterval(attributes.get("synchronizeInterval", 0));
+            } catch (ConfigurationException e) {
+                throw new SAXParseException(e.getMessage(), locator, e);
             }
         }
 
-        private void parseConnection(Attributes attributes) throws SAXException {
-            // Get the mandatory class attribute.
-            final String clazz = attributes.getValue("", "class");
-            if (clazz == null) {
-                throw new SAXException("Missing mandatory attribute \"class\" for element \"connector\"");
-            }
-
-            // Get the mandatory class attribute.
-            final String id = attributes.getValue("", "id");
-            if (id == null) {
-                throw new SAXException("Missing mandatory attribute \"id\" for element \"connector\"");
-            }
-
-            // Create the connector configuration.
-            ConfigurationDictionary configuration = new ConfigurationDictionary();
-            for (int i = 0; i < attributes.getLength(); ++i) {
-                final String key = attributes.getLocalName(i);
-                final String value = attributes.getValue(i);
-                if (!key.equals("class") && !key.equals("id")) {
-                    configuration.set(key, value);
-                }
-            }
-
+        private void parseConnection(ConfigurationDictionary attributes) throws SAXParseException {
             try {
+                // Get the mandatory class attribute.
+                final String clazz = attributes.get("class", String.class);
+
+                // Get the mandatory class attribute.
+                final String id = attributes.get("id", String.class);
+
                 // Try to create the connection with the given configuration.
-                createConnection(clazz, id, configuration);
+                createConnection(clazz, id, attributes);
             } catch (ClassNotFoundException | InstantiationException
                 | IllegalAccessException | DuplicateIdException
                 | ConfigurationException
                 | ConnectionInitializeException e) {
-                throw new SAXException(e);
+                throw new SAXParseException(e.getMessage(), locator, e);
             }
         }
 
-        private void parseInput(Attributes attributes) throws SAXException {
-            // Get the mandatory type attribute.
-            final DataPointType type = DataPointType.fromString(attributes.getValue("", "type"));
-            if (type == DataPointType.INVALID) {
-                throw new SAXException("Missing or invalid mandatory attribute \"type\" for element \"input\"");
-            }
-
-            // Get the mandatory connectorRef attribute and check for connector existence.
-            Connection connection;
-            final String connectionId = attributes.getValue("", "connectionRef");
-            if (connectionId == null) {
-                throw new SAXException("Missing mandatory attribute \"connectionRef\" for element \"input\"");
-            }
-            connection = getConnection(connectionId);
-            if (connection == null) {
-                throw new SAXException("ConnectionRef \"" + connectionId + "\" refers to a non existent connection");
-            }
-
-            // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
-            String dataPointId = "";
-
-            final String groupRef = attributes.getValue("", "groupRef");
-            if (groupRef != null) {
-                dataPointId += groupRef + ".";
-            }
-
-            final String nodeRef = attributes.getValue("", "nodeRef");
-            if (nodeRef != null) {
-                dataPointId += nodeRef + ".";
-            }
-
-            final String pointRef = attributes.getValue("", "pointRef");
-            if (pointRef == null) {
-                throw new SAXException("Missing mandatory attribute \"pointRef\" for element \"input\"");
-            }
-            dataPointId += pointRef;
-
-            // Create the input configuration.
-            ConfigurationDictionary configuration = new ConfigurationDictionary();
-            for (int i = 0; i < attributes.getLength(); ++i) {
-                final String key = attributes.getLocalName(i);
-                final String value = attributes.getValue(i);
-                if (!key.equals("type") && !key.equals("connectionRef") && !key.equals("groupRef") &&
-                    !key.equals("nodeRef") && !key.equals("pointRef")) {
-                    configuration.set(key, value);
-                }
-            }
-
+        private void parseInput(ConfigurationDictionary attributes) throws SAXParseException {
             try {
+                // Get the mandatory type attribute.
+                final DataPointType type = attributes.get("type", DataPointType.class);
+
+                // Get the mandatory connectorRef attribute and validate for connector existence.
+                final String connectionId = attributes.get("connectionRef", String.class);
+                final Connection connection = getConnection(connectionId);
+                if (connection == null) {
+                    throw new SAXParseException("ConnectionRef \""
+                        + connectionId + "\" refers to a non existent connection", locator);
+                }
+
+                // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
+                String dataPointId = attributes.get("groupRef", "");
+                if (!"".equals(dataPointId)) {
+                    dataPointId += ".";
+                }
+                dataPointId += attributes.get("nodeRef", "");
+                if (!"".equals(dataPointId) && !dataPointId.endsWith(".")) {
+                    dataPointId += ".";
+                }
+                dataPointId += attributes.get("pointRef", String.class);
+
                 // Try to add the input.
-                addInput(connection, type, dataPointId, configuration);
+                addInput(connection, type, dataPointId, attributes);
+
             } catch (ConfigurationException | DuplicateIdException e) {
-                throw new SAXException(e);
+                throw new SAXParseException(e.getMessage(), locator, e);
             }
         }
 
-        private void parseOutput(Attributes attributes) throws SAXException {
-            // Get the mandatory type attribute.
-            final DataPointType type = DataPointType.fromString(attributes.getValue("", "type"));
-            if (type == DataPointType.INVALID) {
-                throw new SAXException("Missing or invalid mandatory attribute \"type\" for element \"output\"");
-            }
-
-            // Get the mandatory connectorRef attribute and check for connector existence.
-            Connection connection;
-            final String connectionId = attributes.getValue("", "connectionRef");
-            if (connectionId == null) {
-                throw new SAXException("Missing mandatory attribute \"connectionRef\" for element \"input\"");
-            }
-            connection = getConnection(connectionId);
-            if (connection == null) {
-                throw new SAXException("ConnectionRef \"" + connectionId + "\" refers to a non existent connection");
-            }
-
-            // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
-            String dataPointId = "";
-
-            final String groupRef = attributes.getValue("", "groupRef");
-            if (groupRef != null) {
-                dataPointId += groupRef + ".";
-            }
-
-            final String nodeRef = attributes.getValue("", "nodeRef");
-            if (nodeRef != null) {
-                dataPointId += nodeRef + ".";
-            }
-
-            final String pointRef = attributes.getValue("", "pointRef");
-            if (pointRef == null) {
-                throw new SAXException("Missing mandatory attribute \"pointRef\" for element \"input\"");
-            }
-            dataPointId += pointRef;
-
-            // Create the output configuration.
-            ConfigurationDictionary configuration = new ConfigurationDictionary();
-            for (int i = 0; i < attributes.getLength(); ++i) {
-                final String key = attributes.getLocalName(i);
-                final String value = attributes.getValue(i);
-                if (!key.equals("type") && !key.equals("connectorRef") && !key.equals("groupRef") &&
-                    !key.equals("nodeRef") && !key.equals("pointRef")) {
-                    configuration.set(key, value);
-                }
-            }
-
+        private void parseOutput(ConfigurationDictionary attributes) throws SAXParseException {
             try {
+                // Get the mandatory type attribute.
+                final DataPointType type = attributes.get("type", DataPointType.class);
+
+                final String connectionId = attributes.get("connectionRef", String.class);
+                Connection connection = getConnection(connectionId);
+                if (connection == null) {
+                    throw new SAXParseException("ConnectionRef \""
+                        + connectionId + "\" refers to a non existent connection", locator);
+                }
+
+                // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
+                String dataPointId = attributes.get("groupRef", "");
+                if (!"".equals(dataPointId)) {
+                    dataPointId += ".";
+                }
+                dataPointId += attributes.get("nodeRef", "");
+                if (!"".equals(dataPointId) && !dataPointId.endsWith(".")) {
+                    dataPointId += ".";
+                }
+                dataPointId += attributes.get("pointRef", String.class);
+
                 // Try to add the output.
-                addOutput(connection, type, dataPointId, configuration);
+                addOutput(connection, type, dataPointId, attributes);
             } catch (ConfigurationException | DuplicateIdException e) {
-                throw new SAXException(e);
+                throw new SAXParseException(e.getMessage(), locator, e);
             }
         }
 
-        void parseTrigger(Attributes attributes) throws SAXException {
-            // TODO: Implement. (Maybe we should re-think the whole alarm stuff!)
-            throw new SAXException("Not implemented!");
+        void parseTrigger(ConfigurationDictionary attributes) throws SAXParseException {
+            // TODO: Implement.
+            throw new SAXParseException("Not implemented!", locator);
+        }
+
+        @Override
+        public void setDocumentLocator(Locator locator) {
+            this.locator = locator;
         }
 
         @Override
         public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
             if (state == ParseState.IDLE) {
-                if (qName.equals("field")) {
+                if ("field".equals(qName)) {
                     state = ParseState.FIELD;
-                    parseField(attributes);
+                    parseField(new ConfigurationDictionary(attributes));
                 }
-            } else if (state == ParseState.FIELD && qName.equals("connections")) {
+            } else if (state == ParseState.FIELD && "connections".equals(qName)) {
                 state = ParseState.CONNECTIONS;
-            } else if (state == ParseState.CONNECTIONS && qName.equals("connection")) {
-                parseConnection(attributes);
-            } else if (state == ParseState.FIELD && qName.equals("outputs")) {
+            } else if (state == ParseState.CONNECTIONS && "connection".equals(qName)) {
+                parseConnection(new ConfigurationDictionary(attributes));
+            } else if (state == ParseState.FIELD && "outputs".equals(qName)) {
                 state = ParseState.OUTPUTS;
-            } else if (state == ParseState.OUTPUTS && qName.equals("output")) {
-                parseOutput(attributes);
-            } else if (state == ParseState.FIELD && qName.equals("inputs")) {
+            } else if (state == ParseState.OUTPUTS && "output".equals(qName)) {
+                parseOutput(new ConfigurationDictionary(attributes));
+            } else if (state == ParseState.FIELD && "inputs".equals(qName)) {
                 state = ParseState.INPUTS;
-            } else if (state == ParseState.INPUTS && qName.equals("input")) {
-                parseInput(attributes);
-            } else if (state == ParseState.FIELD && qName.equals("triggers")) {
+            } else if (state == ParseState.INPUTS && "input".equals(qName)) {
+                parseInput(new ConfigurationDictionary(attributes));
+            } else if (state == ParseState.FIELD && "triggers".equals(qName)) {
                 state = ParseState.TRIGGERS;
-            } else if (state == ParseState.TRIGGERS && qName.equals("trigger")) {
-                parseTrigger(attributes);
+            } else if (state == ParseState.TRIGGERS && "trigger".equals(qName)) {
+                parseTrigger(new ConfigurationDictionary(attributes));
             } else {
-                throw new SAXException("Invalid tag \"" + qName + "\" found.");
+                throw new SAXParseException("Invalid tag \"" + qName + "\"", locator);
             }
         }
 
@@ -223,23 +168,23 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
                     break;
 
                 case FIELD:
-                    if (qName.equals("field")) state = ParseState.IDLE;
+                    if ("field".equals(qName)) state = ParseState.IDLE;
                     break;
 
                 case CONNECTIONS:
-                    if (qName.equals("connections")) state = ParseState.FIELD;
+                    if ("connections".equals(qName)) state = ParseState.FIELD;
                     break;
 
                 case INPUTS:
-                    if (qName.equals("inputs")) state = ParseState.FIELD;
+                    if ("inputs".equals(qName)) state = ParseState.FIELD;
                     break;
 
                 case OUTPUTS:
-                    if (qName.equals("outputs")) state = ParseState.FIELD;
+                    if ("outputs".equals(qName)) state = ParseState.FIELD;
                     break;
 
                 case TRIGGERS:
-                    if (qName.equals("triggers")) state = ParseState.TRIGGERS;
+                    if ("triggers".equals(qName)) state = ParseState.TRIGGERS;
                     break;
 
                 default:
@@ -247,19 +192,47 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
 
             }
         }
+    };
 
-        ParseState state = ParseState.IDLE;
-    }
+    // Possible XML file sources are either from the file system, the jar or from a HTTP url.
+    private enum XmlSource {
+        FILE, RESOURCE, URL
+    };
 
     @Override
     protected void loadImplementation(ConfigurationDictionary configuration) throws Exception {
-        // Construct the filename using the mandatory parameter "file".
-        String filename = configuration.get("file", String.class);
+        XmlSource source = configuration.get("source", XmlSource.FILE);
 
-        // Parse the XML file.
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
         SAXParser saxParser = saxParserFactory.newSAXParser();
-        saxParser.parse(filename, new Handler());
+        InputStream inputStream = null;
+
+        switch (source) {
+            case FILE:
+                // Construct the filename using the mandatory parameter "file".
+                File file = new File(configuration.get("file", String.class));
+                if (!file.exists()) {
+                    throw new ConfigurationException("File \"" + file.getAbsolutePath() + "\" not found!");
+                }
+                inputStream = new FileInputStream(file);
+                break;
+
+            case RESOURCE:
+                String resource = configuration.get("resource", String.class);
+
+                inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+                if (inputStream == null) {
+                    throw new ConfigurationException("Resource \"" + resource + "\" does not exist!");
+                }
+                break;
+
+            case URL:
+                URL url = new URL(configuration.get("url", String.class));
+                inputStream = url.openStream();
+        }
+
+        // Parse the XML file.
+        saxParser.parse(inputStream, handler);
     }
 
     @Override

@@ -75,7 +75,15 @@ public class ConnectionGroup implements Synchronizable {
 			} 
 		}
 	}
-	
+
+	/**
+	 * Returns the number of connections that are in the group.
+	 * @return Number of connections.
+     */
+	public int connectionCount() {
+		return connections.size();
+	}
+
 	/**
 	 * Stops all SCADA connections.
 	 */

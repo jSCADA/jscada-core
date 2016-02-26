@@ -122,7 +122,7 @@ public abstract class ScadaSystemFactory {
      */
     public static ScadaSystem load(String... args) throws Exception {
         // The first parameter always defines the type of loading mechanism.
-        if (args.length > 1) {
+        if (args.length >= 1) {
 
             // Create a configuration dictionary using the rest of the given arguments.
             final ConfigurationDictionary configuration =
@@ -146,11 +146,6 @@ public abstract class ScadaSystemFactory {
      */
     public static ScadaSystem load(final String identifier, ConfigurationDictionary configuration) throws Exception {
         ScadaSystemFactory factory = getFactory(identifier);
-
-        // Last check if factory is now pointing to something.
-        if (factory == null) {
-            throw new IOException("Factory \"" + identifier + "\" not supported!");
-        }
 
         // Create a new SCADA system.
         factory.system = new ScadaSystem();
@@ -185,9 +180,9 @@ public abstract class ScadaSystemFactory {
      */
     protected void getUsage(StringBuilder builder) {
         builder
-            .append("\n")
+            .append("\n  ")
             .append(getClass().getCanonicalName())
-            .append(" does not provide any help.\n");
+            .append(" does not provide any help.");
     }
 
     /**
@@ -195,7 +190,7 @@ public abstract class ScadaSystemFactory {
      *
      * @param interval Synchronization-interval in milliseconds.
      */
-    protected void setSynchronisationInterval(int interval) {
+    protected final void setSynchronisationInterval(int interval) {
         system.setSynchronizationInterval(interval);
     }
 
@@ -211,7 +206,7 @@ public abstract class ScadaSystemFactory {
      * @throws DuplicateIdException In the case a (incompatible) data point already exists, this exception is
      *                              thrown.
      */
-    protected DataPoint createDataPoint(final DataPointType type, final String id, boolean useExisting)
+    private DataPoint createDataPoint(final DataPointType type, final String id, boolean useExisting)
         throws DuplicateIdException {
         // If we are allowed to use existing data points...
         if (useExisting) {
@@ -243,6 +238,7 @@ public abstract class ScadaSystemFactory {
                 return new FloatDataPoint(id, system.getProcess());
 
             default:
+                // TODO: Returning null is bad practice.
                 return null;
         }
     }
@@ -261,8 +257,8 @@ public abstract class ScadaSystemFactory {
      * @throws ConfigurationException        The connection could not be initialized due an configuration error.
      * @throws ConnectionInitializeException The connection could not be initialized due an runtime error.
      */
-    protected Connection createConnection(final String clazz, final String id,
-                                          final ConfigurationDictionary configuration)
+    protected final Connection createConnection(final String clazz, final String id,
+                                                final ConfigurationDictionary configuration)
         throws DuplicateIdException, ClassNotFoundException, InstantiationException, IllegalAccessException,
         ConfigurationException, ConnectionInitializeException {
         // If there is already a connection with the given ID present, fail.
@@ -294,7 +290,7 @@ public abstract class ScadaSystemFactory {
      * @param id ID of the connection to return.
      * @return Reference to the connection or null if the connection with the given ID does not exist.
      */
-    protected Connection getConnection(final String id) {
+    protected final Connection getConnection(final String id) {
         return system.getConnections().getConnection(id);
     }
 
@@ -311,8 +307,8 @@ public abstract class ScadaSystemFactory {
      *                                use.
      * @throws DuplicateIdException   If there exists a data point with the same ID but another type.
      */
-    protected void addInput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
-                            final ConfigurationDictionary configuration)
+    protected final void addInput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
+                                  final ConfigurationDictionary configuration)
         throws ConfigurationException, DuplicateIdException {
         // Connection must be valid!
         if (connection == null) {
@@ -320,7 +316,7 @@ public abstract class ScadaSystemFactory {
         }
 
         // Create or get the data point.
-        final DataPoint dataPoint = createDataPoint(dataPointType, dataPointId, true);
+        final DataPoint dataPoint = createDataPoint(dataPointType, dataPointId, false);
 
         // Should never happen, but we never know...
         if (dataPoint == null) {
@@ -348,12 +344,12 @@ public abstract class ScadaSystemFactory {
      * @throws ConfigurationException If the configuration is incomplete or invalid.
      * @throws DuplicateIdException   If there exists a data point with the same ID but another type.
      */
-    protected void addOutput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
-                             final ConfigurationDictionary configuration)
+    protected final void addOutput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
+                                   final ConfigurationDictionary configuration)
         throws ConfigurationException, DuplicateIdException {
         // Connection must be valid!
         if (connection == null) {
-            throw new ConfigurationException("Invalid connector reference!");
+            throw new ConfigurationException("Invalid connection reference!");
         }
 
         // Create or get the data point.
@@ -369,7 +365,7 @@ public abstract class ScadaSystemFactory {
     }
 
     private static ScadaSystemFactory getFactory(String identifier) throws IOException {
-        // First check all build-in SCADA factories...
+        // First validate all build-in SCADA factories...
         if (identifier.toLowerCase().equals("xml")) {
             // Create XML factory.
             return new XmlScadaSystemFactory();

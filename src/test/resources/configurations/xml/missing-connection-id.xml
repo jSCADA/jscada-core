@@ -1,0 +1,5 @@
+<field synchronizeInterval="1000">
+    <connections>
+        <connection class="ch.hevs.jscada.io.dummy.DummyConnection"/>
+    </connections>
+</field>

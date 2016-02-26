@@ -1,0 +1,9 @@
+<field synchronizeInterval="1000">
+    <connections>
+        <connection id="DUMMY" class="ch.hevs.jscada.io.dummy.DummyConnection"/>
+    </connections>
+
+    <inputs>
+        <input connectionRef="DUMMY" type="BOOLEAN" id="aBoolean"/>
+    </inputs>
+</field>

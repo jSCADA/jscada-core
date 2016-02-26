@@ -1,0 +1,7 @@
+<field>
+    <connections>
+        <connection id="DUMMY" class="ch.hevs.jscada.io.dummy.DummyConnection">
+            <miaou/>
+        </connection>
+    </connections>
+</field>

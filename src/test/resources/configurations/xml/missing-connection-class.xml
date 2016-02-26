@@ -1,0 +1,5 @@
+<field synchronizeInterval="1000">
+    <connections>
+        <connection id="DUMMY"/>
+    </connections>
+</field>

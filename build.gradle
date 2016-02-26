@@ -16,6 +16,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.16'
     runnable 'org.slf4j:slf4j-simple:1.7.16'
     testCompile 'junit:junit:4.12'
+    testCompile 'org.nanohttpd:nanohttpd-webserver:2.2.0'
 }
 
 task runnableJar(type: Jar) {

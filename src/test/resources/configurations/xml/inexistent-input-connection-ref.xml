@@ -1,0 +1,5 @@
+<field synchronizeInterval="1000">
+    <inputs>
+        <input connectionRef="DUMMY" pointRef="aBooleanInput" type="BOOLEAN" id="aBoolean"/>
+    </inputs>
+</field>

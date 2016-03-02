@@ -1,7 +1,9 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada.factory;
 
-import ch.hevs.jscada.exception.ConfigurationException;
-import ch.hevs.jscada.io.dummy.DummyConnection;
+import ch.hevs.jscada.config.ConfigurationDictionary;
+import ch.hevs.jscada.ScadaSystem;
+import ch.hevs.jscada.config.ConfigurationException;
+import ch.hevs.jscada.io.field.dummy.DummyConnection;
 import ch.hevs.jscada.model.*;
 import ch.hevs.jscada.model.Process;
 import fi.iki.elonen.SimpleWebServer;
@@ -16,7 +18,7 @@ import java.io.*;
 
 import static org.junit.Assert.*;
 
-public class XmlScadaSystemFactoryTests {
+public class XmlScadaSystemFactoryTest {
     @Rule
     public TemporaryFolder folder= new TemporaryFolder();
     private File simpleConfigurationFile;

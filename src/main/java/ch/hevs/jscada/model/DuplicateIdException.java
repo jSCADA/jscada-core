@@ -1,4 +1,4 @@
-package ch.hevs.jscada.exception;
+package ch.hevs.jscada.model;
 
 /**
  * This exception is thrown if an object in a set of uniquely identifiable objects has the same ID as the item to be 

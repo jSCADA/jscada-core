@@ -1,8 +1,8 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada;
 
-import ch.hevs.jscada.exception.DuplicateIdException;
+import ch.hevs.jscada.model.DuplicateIdException;
 import ch.hevs.jscada.io.ConnectionGroup;
-import ch.hevs.jscada.io.dummy.DummyConnection;
+import ch.hevs.jscada.io.field.dummy.DummyConnection;
 import ch.hevs.jscada.model.BooleanDataPoint;
 import ch.hevs.jscada.model.Process;
 import org.junit.Test;

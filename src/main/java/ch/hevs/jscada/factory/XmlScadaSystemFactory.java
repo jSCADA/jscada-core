@@ -1,10 +1,12 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada.factory;
 
-import ch.hevs.jscada.exception.ConfigurationException;
-import ch.hevs.jscada.exception.ConnectionInitializeException;
-import ch.hevs.jscada.exception.DuplicateIdException;
+import ch.hevs.jscada.config.ConfigurationDictionary;
+import ch.hevs.jscada.config.ConfigurationException;
 import ch.hevs.jscada.io.Connection;
+import ch.hevs.jscada.io.ConnectionInitializeException;
+import ch.hevs.jscada.io.field.FieldConnection;
 import ch.hevs.jscada.model.DataPointType;
+import ch.hevs.jscada.model.DuplicateIdException;
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
@@ -28,6 +30,7 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
     private enum ParseState {
         IDLE, FIELD, CONNECTIONS, INPUTS, OUTPUTS, TRIGGERS
     }
+
     private ParseState state = ParseState.IDLE;
 
     private final DefaultHandler handler = new DefaultHandler() {
@@ -69,7 +72,11 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
                 final Connection connection = getConnection(connectionId);
                 if (connection == null) {
                     throw new SAXParseException("ConnectionRef \""
-                        + connectionId + "\" refers to a non existent connection", locator);
+                        + connectionId + "\" refers to a non existent fieldConnection", locator);
+                }
+                if (!(connection instanceof FieldConnection)) {
+                    throw new SAXParseException("ConnectionRef \""
+                        + connectionId + "\" refers to a connection which is not of type field connection", locator);
                 }
 
                 // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
@@ -84,7 +91,7 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
                 dataPointId += attributes.get("pointRef", String.class);
 
                 // Try to add the input.
-                addInput(connection, type, dataPointId, attributes);
+                addInput((FieldConnection) connection, type, dataPointId, attributes);
 
             } catch (ConfigurationException | DuplicateIdException e) {
                 throw new SAXParseException(e.getMessage(), locator, e);
@@ -100,7 +107,11 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
                 Connection connection = getConnection(connectionId);
                 if (connection == null) {
                     throw new SAXParseException("ConnectionRef \""
-                        + connectionId + "\" refers to a non existent connection", locator);
+                        + connectionId + "\" refers to a non existent fieldConnection", locator);
+                }
+                if (!(connection instanceof FieldConnection)) {
+                    throw new SAXParseException("ConnectionRef \""
+                        + connectionId + "\" refers to a connection which is not of type field connection", locator);
                 }
 
                 // Get the mandatory pointRef and the optional groupRef and nodeRef attributes.
@@ -115,7 +126,7 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
                 dataPointId += attributes.get("pointRef", String.class);
 
                 // Try to add the output.
-                addOutput(connection, type, dataPointId, attributes);
+                addOutput((FieldConnection) connection, type, dataPointId, attributes);
             } catch (ConfigurationException | DuplicateIdException e) {
                 throw new SAXParseException(e.getMessage(), locator, e);
             }
@@ -197,7 +208,7 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
     // Possible XML file sources are either from the file system, the jar or from a HTTP url.
     private enum XmlSource {
         FILE, RESOURCE, URL
-    };
+    }
 
     @Override
     protected void loadImplementation(ConfigurationDictionary configuration) throws Exception {

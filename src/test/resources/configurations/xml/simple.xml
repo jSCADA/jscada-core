@@ -6,7 +6,7 @@
 
     <field synchronizeInterval="1000">
         <connections>
-            <connection id="DUMMY" class="ch.hevs.jscada.io.dummy.DummyConnection"/>
+            <connection id="DUMMY" class="ch.hevs.jscada.io.field.dummy.DummyConnection"/>
         </connections>
 
         <inputs>

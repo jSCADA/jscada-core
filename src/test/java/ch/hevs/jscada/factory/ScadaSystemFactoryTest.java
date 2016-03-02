@@ -1,9 +1,10 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada.factory;
 
-import ch.hevs.jscada.exception.ConfigurationException;
-import ch.hevs.jscada.exception.DuplicateIdException;
-import ch.hevs.jscada.io.Connection;
-import ch.hevs.jscada.io.dummy.DummyConnection;
+import ch.hevs.jscada.config.ConfigurationDictionary;
+import ch.hevs.jscada.config.ConfigurationException;
+import ch.hevs.jscada.model.DuplicateIdException;
+import ch.hevs.jscada.io.field.FieldConnection;
+import ch.hevs.jscada.io.field.dummy.DummyConnection;
 import ch.hevs.jscada.model.DataPointType;
 import org.junit.After;
 import org.junit.Before;
@@ -57,7 +58,7 @@ public class ScadaSystemFactoryTest extends ScadaSystemFactory {
         }
         assertNotNull(ex);
 
-        Connection dummy = getConnection("test");
+        FieldConnection dummy = (FieldConnection) getConnection("test");
         assertNotNull(dummy);
 
         addInput(dummy, DataPointType.BOOLEAN, "boolean", new ConfigurationDictionary("--id=1"));
@@ -106,8 +107,8 @@ public class ScadaSystemFactoryTest extends ScadaSystemFactory {
     public void testDefaultUsage() {
         ScadaSystemFactory.main("help", ScadaSystemFactoryWithoutUsageHelper.class.getCanonicalName());
         assertEquals(stdout.toString(), "Usage:\n" +
-            "java -jar main ch.hevs.jscada.config.ScadaSystemFactoryWithoutUsageHelper \n" +
-            "  ch.hevs.jscada.config.ScadaSystemFactoryWithoutUsageHelper does not provide any help.\n" +
+            "java -jar main ch.hevs.jscada.factory.ScadaSystemFactoryWithoutUsageHelper \n" +
+            "  ch.hevs.jscada.factory.ScadaSystemFactoryWithoutUsageHelper does not provide any help.\n" +
             "\n");
     }
 
@@ -115,7 +116,7 @@ public class ScadaSystemFactoryTest extends ScadaSystemFactory {
     public void testCustomUsage() {
         ScadaSystemFactory.main("help", ScadaSystemFactoryTest.class.getCanonicalName());
         assertEquals(stdout.toString(), "Usage:\n" +
-            "java -jar main ch.hevs.jscada.config.ScadaSystemFactoryTest test\n" +
+            "java -jar main ch.hevs.jscada.factory.ScadaSystemFactoryTest test\n" +
             "\n");
     }
 

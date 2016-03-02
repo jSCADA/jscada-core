@@ -1,9 +1,11 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada.factory;
 
-import ch.hevs.jscada.exception.ConfigurationException;
-import ch.hevs.jscada.exception.ConnectionInitializeException;
-import ch.hevs.jscada.exception.DuplicateIdException;
+import ch.hevs.jscada.ScadaSystem;
+import ch.hevs.jscada.config.ConfigurationDictionary;
+import ch.hevs.jscada.config.ConfigurationException;
 import ch.hevs.jscada.io.Connection;
+import ch.hevs.jscada.io.ConnectionInitializeException;
+import ch.hevs.jscada.io.field.FieldConnection;
 import ch.hevs.jscada.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,8 +259,8 @@ public abstract class ScadaSystemFactory {
      * @throws ConfigurationException        The connection could not be initialized due an configuration error.
      * @throws ConnectionInitializeException The connection could not be initialized due an runtime error.
      */
-    protected final Connection createConnection(final String clazz, final String id,
-                                                final ConfigurationDictionary configuration)
+    protected final FieldConnection createConnection(final String clazz, final String id,
+                                                     final ConfigurationDictionary configuration)
         throws DuplicateIdException, ClassNotFoundException, InstantiationException, IllegalAccessException,
         ConfigurationException, ConnectionInitializeException {
         // If there is already a connection with the given ID present, fail.
@@ -269,17 +271,17 @@ public abstract class ScadaSystemFactory {
         // Try to load the class.
         final Class<?> connectionClass = getClass().getClassLoader().loadClass(clazz);
 
-        // Check that the connection implements the Connection interface.
-        if (Connection.class.isAssignableFrom(connectionClass)) {
+        // Check that the connection implements the FieldConnection interface.
+        if (FieldConnection.class.isAssignableFrom(connectionClass)) {
             // Create the instance, add it to the connection group.
-            final Connection connection = (Connection) connectionClass.newInstance();
+            final FieldConnection connection = (FieldConnection) connectionClass.newInstance();
             system.getConnections().addConnection(id, connection);
 
             // Try to initialize the connection.
-            connection.initialize(configuration);
+            connection.initialize(configuration, system);
             return connection;
         } else {
-            throw new InstantiationException("Connection class does not implement the ch.hevs.scada.io.Connector" +
+            throw new InstantiationException("FieldConnection class does not implement the ch.hevs.scada.io.Connector" +
                 " interface");
         }
     }
@@ -295,24 +297,24 @@ public abstract class ScadaSystemFactory {
     }
 
     /**
-     * Adds an input to the given SCADA connection and connects that input to the given data point. Note that only
+     * Adds an input to the given SCADA fieldConnection and connects that input to the given data point. Note that only
      * one input can be connected at the same time, otherwise the method will fail with an error. Note that if the data
      * point does not already exists, it will be created on the fly by this method.
      *
-     * @param connection    The connection to which the input has to be added.
-     * @param dataPointType Type of the target data point.
-     * @param dataPointId   ID if the data point to use as target for the input.
-     * @param configuration Input configuration parameters.
+     * @param fieldConnection The fieldConnection to which the input has to be added.
+     * @param dataPointType   Type of the target data point.
+     * @param dataPointId     ID if the data point to use as target for the input.
+     * @param configuration   Input configuration parameters.
      * @throws ConfigurationException If the configuration is incomplete or invalid or the data point is already in
      *                                use.
      * @throws DuplicateIdException   If there exists a data point with the same ID but another type.
      */
-    protected final void addInput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
-                                  final ConfigurationDictionary configuration)
+    protected final void addInput(final FieldConnection fieldConnection, final DataPointType dataPointType,
+                                  final String dataPointId, final ConfigurationDictionary configuration)
         throws ConfigurationException, DuplicateIdException {
-        // Connection must be valid!
-        if (connection == null) {
-            throw new ConfigurationException("Invalid connection reference!");
+        // FieldConnection must be valid!
+        if (fieldConnection == null) {
+            throw new ConfigurationException("Invalid fieldConnection reference!");
         }
 
         // Create or get the data point.
@@ -324,32 +326,34 @@ public abstract class ScadaSystemFactory {
         }
 
         // It is an input, so we have to permanently select the data point.
-        if (!dataPoint.select(connection)) {
+        try {
+            dataPoint.select(fieldConnection);
+        } catch (SelectException e) {
             throw new ConfigurationException("Datapoint \"" + dataPointId + "\" used by multiple connectors as input!");
         }
 
-        // Add the input to the connection.
-        connection.addInput(dataPoint, configuration);
+        // Add the input to the fieldConnection.
+        fieldConnection.addInput(dataPoint, configuration);
     }
 
     /**
-     * Adds an output to the given SCADA connection and connects that output to the given data point. Note that
+     * Adds an output to the given SCADA fieldConnection and connects that output to the given data point. Note that
      * multiple outputs can be connected at the same time. If the data point does not already exists, it will be
      * created on the fly by this method.
      *
-     * @param connection    The connection to which the output has to be added.
-     * @param dataPointType Type of the source data point.
-     * @param dataPointId   ID if the data point to use as source for the output.
-     * @param configuration Output configuration parameters.
+     * @param fieldConnection The fieldConnection to which the output has to be added.
+     * @param dataPointType   Type of the source data point.
+     * @param dataPointId     ID if the data point to use as source for the output.
+     * @param configuration   Output configuration parameters.
      * @throws ConfigurationException If the configuration is incomplete or invalid.
      * @throws DuplicateIdException   If there exists a data point with the same ID but another type.
      */
-    protected final void addOutput(final Connection connection, final DataPointType dataPointType, final String dataPointId,
-                                   final ConfigurationDictionary configuration)
+    protected final void addOutput(final FieldConnection fieldConnection, final DataPointType dataPointType,
+                                   final String dataPointId, final ConfigurationDictionary configuration)
         throws ConfigurationException, DuplicateIdException {
-        // Connection must be valid!
-        if (connection == null) {
-            throw new ConfigurationException("Invalid connection reference!");
+        // FieldConnection must be valid!
+        if (fieldConnection == null) {
+            throw new ConfigurationException("Invalid fieldConnection reference!");
         }
 
         // Create or get the data point.
@@ -361,7 +365,7 @@ public abstract class ScadaSystemFactory {
         }
 
         // Add the output to the connector.
-        connection.addOutput(dataPoint, configuration);
+        fieldConnection.addOutput(dataPoint, configuration);
     }
 
     private static ScadaSystemFactory getFactory(String identifier) throws IOException {
@@ -390,7 +394,8 @@ public abstract class ScadaSystemFactory {
             while (resources.hasMoreElements()) {
                 try {
                     Manifest manifest = new Manifest(resources.nextElement().openStream());
-                    if (ScadaSystemFactory.class.getCanonicalName().equals(manifest.getMainAttributes().getValue("Main-Class"))) {
+                    if (ScadaSystemFactory.class.getCanonicalName().equals(
+                        manifest.getMainAttributes().getValue("Main-Class"))) {
                         return "(" + manifest.getMainAttributes().getValue("Implementation-Version") + ") ";
                     }
                 } catch (IOException e) {

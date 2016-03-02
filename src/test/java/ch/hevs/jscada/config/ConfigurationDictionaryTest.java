@@ -1,6 +1,5 @@
 package ch.hevs.jscada.config;
 
-import ch.hevs.jscada.exception.ConfigurationException;
 import ch.hevs.jscada.model.DataPoint;
 import ch.hevs.jscada.model.DataPointType;
 import org.junit.Before;
@@ -986,5 +985,10 @@ public class ConfigurationDictionaryTest {
             "stringFloat: 1234.5678\n" +
             "stringInt: 64\n" +
             "}");
+    }
+
+    @Test(expected = ConfigurationException.class)
+    public void invalidWithDefault() throws ConfigurationException {
+        dict.get("string", 55);
     }
 }

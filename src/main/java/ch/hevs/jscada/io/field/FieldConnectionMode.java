@@ -1,4 +1,4 @@
-package ch.hevs.jscada.io;
+package ch.hevs.jscada.io.field;
 
 /**
  * Defines the synchronization mode of a connection. Based on the definition of the different field protocols and the 
@@ -12,7 +12,7 @@ package ch.hevs.jscada.io;
  * 
  * @author Michael Clausen (michael.clausen@hevs.ch)
  */
-public enum ConnectionMode {
+public enum FieldConnectionMode {
 	/**
 	 * The connection is completely synchronous, for inputs as for outputs. This means that the inputs are only updated
 	 * during the synchronize() method and the same applies for writing to the outputs.

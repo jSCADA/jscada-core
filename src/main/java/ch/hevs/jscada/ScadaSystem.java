@@ -1,4 +1,4 @@
-package ch.hevs.jscada.config;
+package ch.hevs.jscada;
 
 import ch.hevs.jscada.io.ConnectionGroup;
 import ch.hevs.jscada.model.Process;
@@ -42,7 +42,7 @@ public class ScadaSystem {
      * Returns a reference to the SCADA system's primary connection group (which should contain ALL connections related
      * to the SCADA system.
      *
-     * @return Connection group containing all connections.
+     * @return FieldConnection group containing all connections.
      */
     public ConnectionGroup getConnections() {
         return connections;
@@ -131,7 +131,7 @@ public class ScadaSystem {
             synchronizationTimer.cancel();
             synchronizationTimer = null;
         }
-        connections.deinitializeConnections();
+        connections.deinitializeConnections(this);
 
         active = false;
     }

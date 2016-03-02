@@ -1,4 +1,4 @@
-package ch.hevs.jscada.exception;
+package ch.hevs.jscada.io;
 
 /**
  * This exception is thrown when an error happens during the initialization of a SCADA connection.
@@ -22,6 +22,6 @@ public class ConnectionInitializeException extends Exception {
 	 * @param causingException	Exception causing the initialization to fail.
 	 */
 	public ConnectionInitializeException(final Exception causingException) {
-		super("Connection caused exception during initialisation: " + causingException.getMessage());
+		super("FieldConnection caused exception during initialisation: " + causingException.getMessage());
 	} 
 }

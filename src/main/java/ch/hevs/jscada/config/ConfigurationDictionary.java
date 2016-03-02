@@ -1,6 +1,5 @@
 package ch.hevs.jscada.config;
 
-import ch.hevs.jscada.exception.ConfigurationException;
 import org.xml.sax.Attributes;
 
 import java.util.Locale;
@@ -26,38 +25,6 @@ import java.util.TreeMap;
 public class ConfigurationDictionary {
     // Actual parameter storage.
     private final Map<String, Object> properties = new TreeMap<>();
-
-    private static class MissingConfigurationParameterException extends ConfigurationException {
-        public MissingConfigurationParameterException(final String key) {
-            super("Missing mandatory configuration parameter \"" + key + "\"");
-        }
-    }
-
-    private static class InvalidConfigurationParameterTypeException extends ConfigurationException {
-        public InvalidConfigurationParameterTypeException(final String key, final Object value, final Class<?> target) {
-            super("Impossible to convert parameter \"" + key + "\" (value=" +
-                String.valueOf(value) + ") of " + String.valueOf(value.getClass()) + " to " + String.valueOf(target));
-        }
-    }
-
-    private static class InvalidConfigurationParameterValueException extends ConfigurationException {
-        public InvalidConfigurationParameterValueException(final String key, final Object value) {
-            super("Parameter \"" + key + "\" (" + String.valueOf(value) +
-                ") is invalid");
-        }
-
-        public InvalidConfigurationParameterValueException(final String key, final Object value,
-                                                           final Object from, final Object to) {
-            super("Parameter \"" + key + "\" (" + String.valueOf(value) +
-                ")is outside the valid range [" + String.valueOf(from) + ", " + String.valueOf(to) + "]");
-        }
-
-        public InvalidConfigurationParameterValueException(final String key, final Object value,
-                                                           final String valuesList) {
-            super("Invalid value for parameter \"" + key + "\" (" + String.valueOf(value) + "), valid values are: [" +
-                valuesList + "]");
-        }
-    }
 
     /**
      * Creates a {@link ConfigurationDictionary} using the given arguments in the following format
@@ -166,7 +133,7 @@ public class ConfigurationDictionary {
                 } else if (valueClass.isAssignableFrom(Double.class)) {
                     return (T) Double.valueOf((byte) value);
                 } else {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else if (Short.class.isAssignableFrom(value.getClass())) {
                 if (valueClass.isAssignableFrom(Integer.class)) {
@@ -178,7 +145,7 @@ public class ConfigurationDictionary {
                 } else if (valueClass.isAssignableFrom(Double.class)) {
                     return (T) Double.valueOf((short) value);
                 } else {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else if (Integer.class.isAssignableFrom(value.getClass())) {
                 if (valueClass.isAssignableFrom(Long.class)) {
@@ -188,7 +155,7 @@ public class ConfigurationDictionary {
                 } else if (valueClass.isAssignableFrom(Double.class)) {
                     return (T) Double.valueOf((int) value);
                 } else {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else if (Long.class.isAssignableFrom(value.getClass())) {
                 if (valueClass.isAssignableFrom(Float.class)) {
@@ -196,13 +163,13 @@ public class ConfigurationDictionary {
                 } else if (valueClass.isAssignableFrom(Double.class)) {
                     return (T) Double.valueOf((long) value);
                 } else {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else if (Float.class.isAssignableFrom(value.getClass())) {
                 if (valueClass.isAssignableFrom(Double.class)) {
                     return (T) Double.valueOf((float) value);
                 } else {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else if (String.class.isAssignableFrom(value.getClass())) {
                 String stringValue = String.valueOf(value);
@@ -213,7 +180,7 @@ public class ConfigurationDictionary {
                             stringValue.toLowerCase(Locale.ROOT).equals("false")) {
                             return (T) Boolean.valueOf(Boolean.parseBoolean(stringValue));
                         } else {
-                            throw new InvalidConfigurationParameterTypeException(key, stringValue, valueClass);
+                            throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                         }
                     } else if (valueClass.isAssignableFrom(Byte.class)) {
                         return (T) Byte.valueOf(Byte.parseByte(stringValue));
@@ -231,19 +198,19 @@ public class ConfigurationDictionary {
                         return (T) Enum.valueOf((Class<Enum>) valueClass, stringValue);
                     } else {
                         // If there is now conversion known, fail.
-                        throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                        throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                     }
                 } catch (IllegalArgumentException e) {
-                    throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                    throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
                 }
             } else {
                 // All other types can not be processed.
-                throw new InvalidConfigurationParameterTypeException(key, value, valueClass);
+                throw ConfigurationException.invalidConfigurationParameterType(key, value, valueClass);
             }
 
             // If the value is missing, fail with an MissingConfigurationParameterException.
         } else {
-            throw new MissingConfigurationParameterException(key);
+            throw ConfigurationException.missingConfigurationParameter(key);
         }
     }
 
@@ -285,8 +252,12 @@ public class ConfigurationDictionary {
         if (defaultValue != null) {
             try {
                 return (T) get(key, defaultValue.getClass());
-            } catch (MissingConfigurationParameterException e) {
-                return defaultValue;
+            } catch (ConfigurationException e) {
+                if (e.getExceptionCause() == ConfigurationException.MISSING_CONFIGURATION_PARAMETER) {
+                    return defaultValue;
+                } else {
+                    throw e;
+                }
             }
         } else {
             throw new ConfigurationException("\"null\" is an invalid default value!");
@@ -329,7 +300,7 @@ public class ConfigurationDictionary {
          * @param key   Configuration option key.
          * @param value The value of the configuration parameter to validate.
          * @throws ConfigurationException The method should throw a ConfigurationException if the validation of the
-         * value was not successful.
+         *                                value was not successful.
          */
         void validate(final String key, final T value) throws ConfigurationException;
     }
@@ -338,8 +309,8 @@ public class ConfigurationDictionary {
      * Returns a {@link ValidityChecker} that ensures that the provided value is in the given range.
      *
      * @param from Start of the valid range (including the value itself).
-     * @param to End of the valid range (including the value itself).
-     * @param <T> Class or type the validity checker is working with.
+     * @param to   End of the valid range (including the value itself).
+     * @param <T>  Class or type the validity checker is working with.
      * @return {@link ValidityChecker} ensuring the configuration value is in the given range.
      */
     public static <T extends Comparable<T>> ValidityChecker<T> inRange(final T from, final T to) {
@@ -358,10 +329,10 @@ public class ConfigurationDictionary {
             public void validate(String key, T value) throws ConfigurationException {
                 if (value != null) {
                     if (value.compareTo(from) < 0 || value.compareTo(to) > 0) {
-                        throw new InvalidConfigurationParameterValueException(key, value, from, to);
+                        throw ConfigurationException.invalidConfigurationParameterValue(key, value, from, to);
                     }
                 } else {
-                    throw new InvalidConfigurationParameterValueException(key, null);
+                    throw ConfigurationException.invalidConfigurationParameterValue(key, null);
                 }
             }
         };
@@ -374,6 +345,7 @@ public class ConfigurationDictionary {
      * @param <T> Class or type the validity checker is working with.
      * @return {@link ValidityChecker} ensuring the configuration value is in the given set.
      */
+    @SafeVarargs
     public static <T extends Comparable<T>> ValidityChecker<T> inSet(final T... set) {
         assert (set.length > 0);
 
@@ -397,7 +369,7 @@ public class ConfigurationDictionary {
                         validValues.append(", ");
                     }
                 }
-                throw new InvalidConfigurationParameterValueException(key, value, validValues.toString());
+                throw ConfigurationException.invalidConfigurationParameterValue(key, value, validValues.toString());
             }
         };
     }
@@ -417,6 +389,7 @@ public class ConfigurationDictionary {
      */
     public <T extends Comparable<T>> T get(final String key, final ValidityChecker<T> checker)
         throws ConfigurationException {
+        @SuppressWarnings("unchecked")
         T value = (T) get(key, checker.getType());
         checker.validate(key, value);
         return value;

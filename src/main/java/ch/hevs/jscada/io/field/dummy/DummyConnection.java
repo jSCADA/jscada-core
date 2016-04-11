@@ -4,22 +4,23 @@ import ch.hevs.jscada.ScadaSystem;
 import ch.hevs.jscada.config.ConfigurationDictionary;
 import ch.hevs.jscada.config.ConfigurationException;
 import ch.hevs.jscada.io.ConnectionInitializeException;
-import ch.hevs.jscada.model.ConversionException;
 import ch.hevs.jscada.io.ConnectionState;
-import ch.hevs.jscada.io.SynchronizableListener;
 import ch.hevs.jscada.io.field.AbstractFieldConnection;
 import ch.hevs.jscada.io.field.FieldConnectionMode;
+import ch.hevs.jscada.model.ConversionException;
 import ch.hevs.jscada.model.DataPoint;
 import ch.hevs.jscada.model.DataPointListener;
 import ch.hevs.jscada.model.SelectException;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public final class DummyConnection extends AbstractFieldConnection implements DataPointListener {
 	private final Map<String,DataPoint> inputs = new TreeMap<>();
 	private final Map<DataPoint,String> outputs = new TreeMap<>();
 	private final Map<String,String> values = new TreeMap<>();
-	private final List<SynchronizableListener> syncListeners = new ArrayList<>();
 
 	/*** FieldConnection implementation *******************************************************************************/
 	@Override

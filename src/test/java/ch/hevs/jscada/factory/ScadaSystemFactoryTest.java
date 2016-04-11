@@ -1,11 +1,12 @@
 package ch.hevs.jscada.factory;
 
+import ch.hevs.jscada.ScadaSystem;
 import ch.hevs.jscada.config.ConfigurationDictionary;
 import ch.hevs.jscada.config.ConfigurationException;
-import ch.hevs.jscada.model.DuplicateIdException;
 import ch.hevs.jscada.io.field.FieldConnection;
 import ch.hevs.jscada.io.field.dummy.DummyConnection;
 import ch.hevs.jscada.model.DataPointType;
+import ch.hevs.jscada.model.DuplicateIdException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -141,7 +142,7 @@ public class ScadaSystemFactoryTest extends ScadaSystemFactory {
         ScadaSystemFactory.load("miaou", new ConfigurationDictionary());
     }
 
-    /*@Test
+    @Test
     public void loadingApi() throws Exception {
         ConfigurationDictionary dict = new ConfigurationDictionary();
         dict.set("test", "test");
@@ -165,7 +166,7 @@ public class ScadaSystemFactoryTest extends ScadaSystemFactory {
         assertNotNull(scadaSystem.getProcess().getDataPoint("float"));
 
         scadaSystem.stop();
-    }*/
+    }
 
     @Test
     public void loadingMain() {

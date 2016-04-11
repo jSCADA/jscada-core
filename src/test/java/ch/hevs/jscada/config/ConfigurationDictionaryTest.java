@@ -589,12 +589,12 @@ public class ConfigurationDictionaryTest {
 
     @Test(expected = ConfigurationException.class)
     public void getShortInRangeToSmall() throws ConfigurationException {
-        short s = dict.get("short", ConfigurationDictionary.inRange((byte) 17, (byte) 22));
+        dict.get("short", ConfigurationDictionary.inRange((byte) 17, (byte) 22));
     }
 
     @Test(expected = ConfigurationException.class)
     public void getShortInRangeToBig() throws ConfigurationException {
-        short s = dict.get("short", ConfigurationDictionary.inRange((short) 1, (short) 12));
+        dict.get("short", ConfigurationDictionary.inRange((short) 1, (short) 12));
     }
 
     @Test
@@ -605,12 +605,12 @@ public class ConfigurationDictionaryTest {
 
     @Test(expected = ConfigurationException.class)
     public void getIntInRangeToSmall() throws ConfigurationException {
-        int i = dict.get("int", ConfigurationDictionary.inRange(35, 200));
+        dict.get("int", ConfigurationDictionary.inRange(35, 200));
     }
 
     @Test(expected = ConfigurationException.class)
     public void getIntInRangeToBig() throws ConfigurationException {
-        int i = dict.get("int", ConfigurationDictionary.inRange(1, 12));
+        dict.get("int", ConfigurationDictionary.inRange(1, 12));
     }
 
     @Test
@@ -621,12 +621,12 @@ public class ConfigurationDictionaryTest {
 
     @Test(expected = ConfigurationException.class)
     public void getLongInRangeToSmall() throws ConfigurationException {
-        long l = dict.get("long", ConfigurationDictionary.inRange(200L, 201L));
+        dict.get("long", ConfigurationDictionary.inRange(200L, 201L));
     }
 
     @Test(expected = ConfigurationException.class)
     public void getLongInRangeToBig() throws ConfigurationException {
-        long l = dict.get("long", ConfigurationDictionary.inRange(1L, 1L));
+        dict.get("long", ConfigurationDictionary.inRange(1L, 1L));
     }
 
     @Test
@@ -637,12 +637,12 @@ public class ConfigurationDictionaryTest {
 
     @Test(expected = ConfigurationException.class)
     public void getFloatInRangeToSmall() throws ConfigurationException {
-        float f = dict.get("float", ConfigurationDictionary.inRange(2000f, 2005f));
+        dict.get("float", ConfigurationDictionary.inRange(2000f, 2005f));
     }
 
     @Test(expected = ConfigurationException.class)
     public void getFloatInRangeToBig() throws ConfigurationException {
-        float f = dict.get("long", ConfigurationDictionary.inRange(1f, 1.01f));
+        dict.get("long", ConfigurationDictionary.inRange(1f, 1.01f));
     }
 
     @Test
@@ -653,17 +653,17 @@ public class ConfigurationDictionaryTest {
 
     @Test(expected = ConfigurationException.class)
     public void getDoubleInRangeToSmall() throws ConfigurationException {
-        double d = dict.get("double", ConfigurationDictionary.inRange(2000.0, 2005.0));
+        dict.get("double", ConfigurationDictionary.inRange(2000.0, 2005.0));
     }
 
     @Test(expected = ConfigurationException.class)
     public void getDoubleInRangeToBig() throws ConfigurationException {
-        double d = dict.get("double", ConfigurationDictionary.inRange(1.0, 1.01));
+        dict.get("double", ConfigurationDictionary.inRange(1.0, 1.01));
     }
 
     @Test(expected = AssertionError.class)
     public void getStringInRange() throws ConfigurationException {
-        String s = dict.get("string", ConfigurationDictionary.inRange("A", "Z"));
+        dict.get("string", ConfigurationDictionary.inRange("A", "Z"));
     }
 
     @Test(expected = AssertionError.class)
@@ -689,85 +689,93 @@ public class ConfigurationDictionaryTest {
     @Test
     public void getByteInSet() throws ConfigurationException {
         byte b = dict.get("byte", ConfigurationDictionary.inSet((byte) 1, (byte) 8, (byte) 17));
+        assertEquals(b, 8);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getByteNotInSet() throws ConfigurationException {
-        byte b = dict.get("byte", ConfigurationDictionary.inSet((byte) 1, (byte) 77, (byte) 17));
+        dict.get("byte", ConfigurationDictionary.inSet((byte) 1, (byte) 77, (byte) 17));
     }
 
     @Test
     public void getShortInSet() throws ConfigurationException {
         short s = dict.get("short", ConfigurationDictionary.inSet((short) 1, (short) 8, (short) 16));
+        assertEquals(s, 16);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getShortNotInSet() throws ConfigurationException {
-        short s = dict.get("short", ConfigurationDictionary.inSet((short) 1, (short) 77, (short) 17));
+        dict.get("short", ConfigurationDictionary.inSet((short) 1, (short) 77, (short) 17));
     }
 
     @Test
     public void getIntInSet() throws ConfigurationException {
         int i = dict.get("int", ConfigurationDictionary.inSet(1, 8, 16, 32, 77));
+        assertEquals(i, 32);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getIntNotInSet() throws ConfigurationException {
-        int i = dict.get("int", ConfigurationDictionary.inSet(1));
+        dict.get("int", ConfigurationDictionary.inSet(1));
     }
 
     @Test
     public void getLongInSet() throws ConfigurationException {
         long l = dict.get("long", ConfigurationDictionary.inSet(64L));
+        assertEquals(l, 64L);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getLongNotInSet() throws ConfigurationException {
-        long l = dict.get("long", ConfigurationDictionary.inSet(1L));
+        dict.get("long", ConfigurationDictionary.inSet(1L));
     }
 
     @Test
     public void getFloatInSet() throws ConfigurationException {
         float f = dict.get("float", ConfigurationDictionary.inSet(1f, 2f, 3f, 12.34f, 22f));
+        assertEquals(f, 12.34f, 0.001);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getFloatNotInSet() throws ConfigurationException {
-        float f = dict.get("float", ConfigurationDictionary.inSet(0f, 1000f));
+        dict.get("float", ConfigurationDictionary.inSet(0f, 1000f));
     }
 
     @Test
     public void getDoubleInSet() throws ConfigurationException {
         double d = dict.get("double", ConfigurationDictionary.inSet(0.0, 43.21, 1.1));
+        assertEquals(d, 43.21, 0.001);
     }
 
     @Test(expected = ConfigurationException.class)
     public void getDoubleNotInSet() throws ConfigurationException {
-        double d = dict.get("double", ConfigurationDictionary.inSet(0.9, 1.1));
+        dict.get("double", ConfigurationDictionary.inSet(0.9, 1.1));
     }
 
     @Test
     public void getStringInSet() throws ConfigurationException {
         String s = dict.get("string", ConfigurationDictionary.inSet("A", "B", "D", "VOID", "E"));
+        assertEquals(s, "VOID");
     }
 
     @Test(expected = ConfigurationException.class)
     public void getStringNotInSet() throws ConfigurationException {
-        String s = dict.get("string", ConfigurationDictionary.inSet("1", "2", "3"));
+        dict.get("string", ConfigurationDictionary.inSet("1", "2", "3"));
     }
 
     private enum IncludingVOID {A, B, C, D, E, F, G, VOID, H, I, J}
 
     @Test
     public void getEnumExisting() throws ConfigurationException {
-        IncludingVOID i = dict.get("string", IncludingVOID.class);
+        IncludingVOID e = dict.get("string", IncludingVOID.class);
+        assertEquals(e, IncludingVOID.VOID);
     }
 
     private enum NotIncludingVOID {A, B, C, D, E, F, G, H, I, J}
 
     @Test(expected = ConfigurationException.class)
     public void getEnumNotExisting() throws ConfigurationException {
-        NotIncludingVOID n = dict.get("string", NotIncludingVOID.class);
+        dict.get("string", NotIncludingVOID.class);
     }
 
     @Test

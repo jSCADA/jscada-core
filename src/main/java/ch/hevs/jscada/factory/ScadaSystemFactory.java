@@ -240,8 +240,7 @@ public abstract class ScadaSystemFactory {
                 return new FloatDataPoint(id, system.getProcess());
 
             default:
-                // TODO: Returning null is bad practice.
-                return null;
+                throw new IllegalArgumentException("Invalid data type specified!");
         }
     }
 

@@ -794,6 +794,8 @@ public class ConfigurationDictionaryTest {
 
             @Override
             public void validate(String key, Float value) throws ConfigurationException {
+                assertEquals(key, "float");
+                assertEquals(value, 12.34f, 0.001);
             }
         });
     }

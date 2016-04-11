@@ -2,9 +2,7 @@ package ch.hevs.jscada.model;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public final class FloatDataPointTest implements DataPointListener<FloatDataPoint> {
     private Process process = new Process();
@@ -99,44 +97,56 @@ public final class FloatDataPointTest implements DataPointListener<FloatDataPoin
     @Test(expected = SelectException.class)
     public void withoutSelection() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("f1", process);
+        assertFalse(p.isSelected());
         p.setValue(42.42, this);
     }
 
     @Test(expected = SelectException.class)
     public void selectWithNull() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("f1", process);
+        assertFalse(p.isSelected());
         p.select(null);
     }
 
     @Test(expected = SelectException.class)
     public void alreadySelected() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("f1", process);
+        assertFalse(p.isSelected());
         Object o = new Object();
         p.select(o);
+        assertTrue(p.isSelected());
         p.select(this);
     }
 
     @Test(expected = SelectException.class)
     public void alreadySelectedWhenWriting() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("f1", process);
+        assertFalse(p.isSelected());
         Object o = new Object();
         p.select(o);
+        assertTrue(p.isSelected());
         p.setValue(42.42, this);
     }
 
     @Test(expected = SelectException.class)
     public void deselect() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("f1", process);
+        assertFalse(p.isSelected());
         p.select(this);
+        assertTrue(p.isSelected());
         p.deselect(this);
+        assertFalse(p.isSelected());
         p.setValue(42.42, this);
     }
 
     @Test
     public void selectTwice() throws DuplicateIdException, SelectException {
         p = new FloatDataPoint("b1", process);
+        assertFalse(p.isSelected());
         p.select(this);
+        assertTrue(p.isSelected());
         p.select(this);
+        assertTrue(p.isSelected());
     }
 
     @Test

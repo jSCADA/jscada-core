@@ -131,11 +131,25 @@ public abstract class DataPoint implements Selectable, StringConvertible, Double
         if (object == null) {
             throw new SelectException("null can not be used as select object!");
         }
-        if (selectOwner != null && selectOwner.get() != null && selectOwner.get() != object) {
+        if (isSelected() && selectOwner.get() != object) {
             throw new SelectException(String.format("Datapoint \"%s\" is already selected by %s", id,
                 String.valueOf(selectOwner.get())));
         }
         selectOwner = new WeakReference<>(object);
+    }
+
+    @Override
+    public boolean isSelected() {
+        if (selectOwner != null) {
+            if (selectOwner.get() != null) {
+                return true;
+            } else {
+                selectOwner = null;
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override

@@ -369,7 +369,7 @@ public abstract class ScadaSystemFactory {
 
     private static ScadaSystemFactory getFactory(String identifier) throws IOException {
         // First validate all build-in SCADA factories...
-        if (identifier.toLowerCase().equals("xml")) {
+        if (identifier.equalsIgnoreCase("xml")) {
             // Create XML factory.
             return new XmlScadaSystemFactory();
         } else {

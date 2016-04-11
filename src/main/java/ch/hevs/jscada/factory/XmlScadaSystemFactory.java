@@ -240,6 +240,10 @@ class XmlScadaSystemFactory extends ScadaSystemFactory {
             case URL:
                 URL url = new URL(configuration.get("url", String.class));
                 inputStream = url.openStream();
+                break;
+
+            default:
+                throw new ConfigurationException("\"" + source + "\" is not a valid configuration source!");
         }
 
         // Parse the XML file.

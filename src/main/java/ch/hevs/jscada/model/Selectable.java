@@ -20,6 +20,13 @@ public interface Selectable {
     void select(Object object) throws SelectException;
 
     /**
+     * Returns true if the Selectable is already selected, false otherwise.
+     *
+     * @return  True if already selected, false otherwise.
+     */
+    boolean isSelected();
+
+    /**
      * Deselects the data point after a write operation on the data point in order to enable other entities write
      * access too.
      *
